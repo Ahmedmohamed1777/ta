@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسميع 1000 كلمة إنجليزية مع النطق</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+            line-height: 1.6;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .word-display {
+            font-size: 32px;
+            font-weight: bold;
+            text-align: center;
+            margin: 30px 0;
+            min-height: 50px;
+            color: #3498db;
+        }
+        .pronunciation {
+            text-align: center;
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 15px;
+            direction: ltr;
+        }
+        .input-group {
+            margin-bottom: 20px;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            font-size: 18px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+        }
+        input:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .buttons {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+            font-size: 18px;
+            display: none;
+        }
+        .correct {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            display: block;
+        }
+        .wrong {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            display: block;
+        }
+        .progress-container {
+            margin: 30px 0;
+        }
+        .progress-bar {
+            height: 10px;
+            background-color: #e9ecef;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .progress {
+            height: 100%;
+            background-color: #28a745;
+            width: 0%;
+            transition: width 0.5s;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        .stat-box {
+            margin: 5px;
+            padding: 8px 12px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            min-width: 120px;
+            text-align: center;
+        }
+        .play-btn {
+            background-color: #6c757d;
+            padding: 8px 15px;
+            font-size: 14px;
+        }
+        .play-btn:hover {
+            background-color: #5a6268;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>تسميع 1000 كلمة إنجليزية مع النطق</h1>
+        
+        <div class="stats">
+            <div class="stat-box">الكلمات المتبقية: <span id="remaining-words">1000</span></div>
+            <div class="stat-box">الكلمات الصحيحة: <span id="correct-words">0</span></div>
+            <div class="stat-box">الكلمات الخاطئة: <span id="wrong-words">0</span></div>
+        </div>
+        
+        <div class="progress-container">
+            <div class="progress-bar">
+                <div class="progress" id="progress"></div>
+            </div>
+            <div style="text-align: center; margin-top: 5px;">
+                <span id="progress-percent">0</span>% اكتمل
+            </div>
+        </div>
+        
+        <div class="word-display" id="current-word">جارٍ تحميل الكلمات...</div>
+        <div class="pronunciation" id="pronunciation"></div>
+        
+        <div class="input-group">
+            <input type="text" id="user-answer" placeholder="اكتب الترجمة الإنجليزية هنا" autocomplete="off">
+        </div>
+        
+        <div class="buttons">
+            <button id="check-btn">تحقق</button>
+            <button id="next-btn">تخطي</button>
+            <button id="show-answer-btn">اظهر الإجابة</button>
+            <button id="play-btn" class="play-btn"><i class="fas fa-volume-up"></i> استمع للنطق</button>
+        </div>
+        
+        <div class="result" id="result"></div>
+    </div>
+
+    <!-- Font Awesome for icons -->
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+
+    <script>
+        // قاعدة بيانات الكلمات (1000 كلمة أساسية)
+        const allWords = [
+            // الكلمات الأساسية (150 كلمة)
+            { arabic: "قطة", english: "cat", pronunciation: "كات" },
+            { arabic: "كلب", english: "dog", pronunciation: "دوغ" },
+            { arabic: "منزل", english: "house", pronunciation: "هاوس" },
+            { arabic: "كتاب", english: "book", pronunciation: "بوك" },
+            { arabic: "قلم", english: "pen", pronunciation: "بين" },
+            { arabic: "مدرسة", english: "school", pronunciation: "سكول" },
+            { arabic: "سيارة", english: "car", pronunciation: "كار" },
+            { arabic: "شجرة", english: "tree", pronunciation: "تري" },
+            { arabic: "بحر", english: "sea", pronunciation: "سي" },
+            { arabic: "جبل", english: "mountain", pronunciation: "ماونتن" },
+            { arabic: "تفاحة", english: "apple", pronunciation: "آبل" },
+            { arabic: "موز", english: "banana", pronunciation: "بَنانَه" },
+            { arabic: "ماء", english: "water", pronunciation: "واتر" },
+            { arabic: "قهوة", english: "coffee", pronunciation: "كوفي" },
+            { arabic: "شاي", english: "tea", pronunciation: "تي" },
+            { arabic: "خبز", english: "bread", pronunciation: "بريد" },
+            { arabic: "جبن", english: "cheese", pronunciation: "تشيز" },
+            { arabic: "لحم", english: "meat", pronunciation: "ميت" },
+            { arabic: "سمك", english: "fish", pronunciation: "فيش" },
+            { arabic: "دجاج", english: "chicken", pronunciation: "تشيكِن" },
+            { arabic: "بيض", english: "egg", pronunciation: "إيغ" },
+            { arabic: "أرز", english: "rice", pronunciation: "رايْس" },
+            { arabic: "معكرونة", english: "pasta", pronunciation: "باستا" },
+            { arabic: "خضار", english: "vegetables", pronunciation: "فِجْتابلز" },
+            { arabic: "فواكه", english: "fruits", pronunciation: "فروتس" },
+            { arabic: "حليب", english: "milk", pronunciation: "ميلك" },
+            { arabic: "عصير", english: "juice", pronunciation: "جوس" },
+            { arabic: "سكر", english: "sugar", pronunciation: "شُوجر" },
+            { arabic: "ملح", english: "salt", pronunciation: "سولت" },
+            { arabic: "فلفل", english: "pepper", pronunciation: "بيبر" },
+            { arabic: "زيت", english: "oil", pronunciation: "أويل" },
+            { arabic: "زبدة", english: "butter", pronunciation: "بَتر" },
+            { arabic: "عسل", english: "honey", pronunciation: "هاني" },
+            { arabic: "مربى", english: "jam", pronunciation: "جام" },
+            { arabic: "بسكويت", english: "biscuit", pronunciation: "بِسْكِت" },
+            { arabic: "شوكولاتة", english: "chocolate", pronunciation: "تشوكلت" },
+            { arabic: "آيس كريم", english: "ice cream", pronunciation: "آيس كريم" },
+            { arabic: "حلوى", english: "candy", pronunciation: "كاندي" },
+            { arabic: "كعكة", english: "cake", pronunciation: "كيك" },
+            { arabic: "خاتم", english: "ring", pronunciation: "رينغ" },
+            { arabic: "ساعة", english: "watch", pronunciation: "ووتش" },
+            { arabic: "سلسلة", english: "necklace", pronunciation: "نِكْليس" },
+            { arabic: "قرط", english: "earring", pronunciation: "إيرينغ" },
+            { arabic: "سوار", english: "bracelet", pronunciation: "بريسليت" },
+            { arabic: "حقيبة", english: "bag", pronunciation: "باغ" },
+            { arabic: "محفظة", english: "wallet", pronunciation: "وولِت" },
+            { arabic: "نظارة", english: "glasses", pronunciation: "غلاسِز" },
+            { arabic: "قبعة", english: "hat", pronunciation: "هات" },
+            { arabic: "وشاح", english: "scarf", pronunciation: "سكارف" },
+            { arabic: "قفازات", english: "gloves", pronunciation: "غلَفز" },
+            { arabic: "حذاء", english: "shoe", pronunciation: "شو" },
+            { arabic: "جورب", english: "sock", pronunciation: "سوك" },
+            { arabic: "حذاء رياضي", english: "sneakers", pronunciation: "سنيكرز" },
+            { arabic: "صندل", english: "sandals", pronunciation: "صاندلز" },
+            { arabic: "حذاء بكعب", english: "high heels", pronunciation: "هاي هيلز" },
+            { arabic: "معطف", english: "coat", pronunciation: "كوت" },
+            { arabic: "جاكيت", english: "jacket", pronunciation: "جاكِت" },
+            { arabic: "قميص", english: "shirt", pronunciation: "شرت" },
+            { arabic: "تي شيرت", english: "t-shirt", pronunciation: "تي شرت" },
+            { arabic: "بنطال", english: "pants", pronunciation: "بانتس" },
+            { arabic: "جينز", english: "jeans", pronunciation: "جينز" },
+            { arabic: "تنورة", english: "skirt", pronunciation: "سكيرت" },
+            { arabic: "فستان", english: "dress", pronunciation: "دريس" },
+            { arabic: "بيجاما", english: "pajamas", pronunciation: "بِجاماز" },
+            { arabic: "ملابس داخلية", english: "underwear", pronunciation: "أندروير" },
+            { arabic: "سرير", english: "bed", pronunciation: "بيد" },
+            { arabic: "وسادة", english: "pillow", pronunciation: "بيلو" },
+            { arabic: "بطانية", english: "blanket", pronunciation: "بلانكِت" },
+            { arabic: "شرشف", english: "sheet", pronunciation: "شيت" },
+            { arabic: "سجادة", english: "carpet", pronunciation: "كاربِت" },
+            { arabic: "مصباح", english: "lamp", pronunciation: "لامب" },
+            { arabic: "ساعة حائط", english: "clock", pronunciation: "كلوك" },
+            { arabic: "مرآة", english: "mirror", pronunciation: "ميرور" },
+            { arabic: "خزانة", english: "closet", pronunciation: "كلوزِت" },
+            { arabic: "طاولة", english: "table", pronunciation: "تيبل" },
+            { arabic: "كرسي", english: "chair", pronunciation: "تشير" },
+            { arabic: "أريكة", english: "sofa", pronunciation: "صوفا" },
+            { arabic: "تلفزيون", english: "TV", pronunciation: "تي في" },
+            { arabic: "راديو", english: "radio", pronunciation: "راديو" },
+            { arabic: "حاسوب", english: "computer", pronunciation: "كمبيوتر" },
+            { arabic: "لابتوب", english: "laptop", pronunciation: "لاب توب" },
+            { arabic: "هاتف", english: "phone", pronunciation: "فون" },
+            { arabic: "موبايل", english: "mobile", pronunciation: "موبايل" },
+            { arabic: "كاميرا", english: "camera", pronunciation: "كاميرا" },
+            { arabic: "سماعات", english: "headphones", pronunciation: "هيدفونز" },
+            { arabic: "مايكروفون", english: "microphone", pronunciation: "مايكروفون" },
+            { arabic: "ثلاجة", english: "refrigerator", pronunciation: "ريفريجيريتر" },
+            { arabic: "فرن", english: "oven", pronunciation: "أوفن" },
+            { arabic: "مايكروويف", english: "microwave", pronunciation: "مايكروويف" },
+            { arabic: "غسالة", english: "washing machine", pronunciation: "ووشينغ ماشين" },
+            { arabic: "مجفف", english: "dryer", pronunciation: "دراير" },
+            { arabic: "مكنسة", english: "vacuum cleaner", pronunciation: "فاكيوم كلينر" },
+            { arabic: "مكواة", english: "iron", pronunciation: "آيرن" },
+            { arabic: "مروحة", english: "fan", pronunciation: "فان" },
+            { arabic: "مكيف", english: "air conditioner", pronunciation: "إير كنديشنر" },
+            { arabic: "سخان", english: "heater", pronunciation: "هيتر" },
+            { arabic: "مصباح", english: "light", pronunciation: "لايت" },
+            { arabic: "مفتاح", english: "key", pronunciation: "كي" },
+            { arabic: "قفل", english: "lock", pronunciation: "لوك" },
+            { arabic: "حقيبة سفر", english: "suitcase", pronunciation: "سوتكيس" },
+            { arabic: "شنطة", english: "bag", pronunciation: "باغ" },
+            { arabic: "حقيبة ظهر", english: "backpack", pronunciation: "باك باك" },
+            { arabic: "محفظة", english: "wallet", pronunciation: "وولِت" },
+            { arabic: "نقود", english: "money", pronunciation: "ماني" },
+            { arabic: "عملة", english: "currency", pronunciation: "كرنسي" },
+            { arabic: "بطاقة ائتمان", english: "credit card", pronunciation: "كريديت كارد" },
+            { arabic: "ورقة", english: "paper", pronunciation: "بيبر" },
+            { arabic: "قلم رصاص", english: "pencil", pronunciation: "بنسل" },
+            { arabic: "قلم حبر", english: "pen", pronunciation: "بين" },
+            { arabic: "ممحاة", english: "eraser", pronunciation: "يريزر" },
+            { arabic: "مسطرة", english: "ruler", pronunciation: "رولر" },
+            { arabic: "مقص", english: "scissors", pronunciation: "سيزرز" },
+            { arabic: "صمغ", english: "glue", pronunciation: "غلو" },
+            { arabic: "دفتر", english: "notebook", pronunciation: "نوت بوك" },
+            { arabic: "كتاب", english: "book", pronunciation: "بوك" },
+            { arabic: "مجلة", english: "magazine", pronunciation: "ماجازين" },
+            { arabic: "جريدة", english: "newspaper", pronunciation: "نيوز بيبر" },
+            { arabic: "قصة", english: "story", pronunciation: "ستوري" },
+            { arabic: "رواية", english: "novel", pronunciation: "نوفل" },
+            { arabic: "شعر", english: "poetry", pronunciation: "بويتري" },
+
+            { arabic: "مكتب", english: "office", pronunciation: "أوفيس" },
+            { arabic: "مدير", english: "manager", pronunciation: "مانيجر" },
+            { arabic: "موظف", english: "employee", pronunciation: "إمبلوي" },
+            { arabic: "اجتماع", english: "meeting", pronunciation: "ميتينغ" },
+            { arabic: "عرض تقديمي", english: "presentation", pronunciation: "بريزينتيشن" },
+            { arabic: "مشروع", english: "project", pronunciation: "بروجكت" },
+            { arabic: "تقرير", english: "report", pronunciation: "ريبورت" },
+            { arabic: "ميزانية", english: "budget", pronunciation: "باجيت" },
+            { arabic: "راتب", english: "salary", pronunciation: "سالاري" },
+            { arabic: "عمل", english: "work", pronunciation: "ورك" },
+            { arabic: "شمس", english: "sun", pronunciation: "صن" },
+            { arabic: "قمر", english: "moon", pronunciation: "مون" },
+            { arabic: "نجمة", english: "star", pronunciation: "ستار" },
+            { arabic: "سماء", english: "sky", pronunciation: "سكاي" },
+            { arabic: "سحاب", english: "cloud", pronunciation: "كلود" },
+            { arabic: "مطر", english: "rain", pronunciation: "رين" },
+            { arabic: "ثلج", english: "snow", pronunciation: "سنو" },
+            { arabic: "ريح", english: "wind", pronunciation: "ويند" },
+            { arabic: "عاصفة", english: "storm", pronunciation: "ستورم" },
+            { arabic: "برق", english: "lightning", pronunciation: "لايتنينغ" },
+            { arabic: "أسد", english: "lion", pronunciation: "لايون" },
+            { arabic: "نمر", english: "tiger", pronunciation: "تاايجر" },
+            { arabic: "فيل", english: "elephant", pronunciation: "إليفانت" },
+            { arabic: "زرافة", english: "giraffe", pronunciation: "جراف" },
+            { arabic: "قرد", english: "monkey", pronunciation: "مونكي" },
+            { arabic: "ذئب", english: "wolf", pronunciation: "وولف" },
+            { arabic: "ثعلب", english: "fox", pronunciation: "فوكس" },
+            { arabic: "دب", english: "bear", pronunciation: "بير" },
+            { arabic: "كنغر", english: "kangaroo", pronunciation: "كانغارو" },
+            { arabic: "باندا", english: "panda", pronunciation: "باندا" },
+            { arabic: "فراولة", english: "strawberry", pronunciation: "ستروبيري" },
+            { arabic: "عنب", english: "grapes", pronunciation: "جرايبس" },
+            { arabic: "مانجو", english: "mango", pronunciation: "مانجو" },
+            { arabic: "أناناس", english: "pineapple", pronunciation: "باينابيل" },
+            { arabic: "بطيخ", english: "watermelon", pronunciation: "واترملون" },
+            { arabic: "شمام", english: "melon", pronunciation: "ملون" },
+            { arabic: "خوخ", english: "peach", pronunciation: "بيتش" },
+            { arabic: "كمثرى", english: "pear", pronunciation: "بير" },
+            { arabic: "برتقال", english: "orange", pronunciation: "أورينج" },
+            { arabic: "ليمون", english: "lemon", pronunciation: "ليمون" },
+            { arabic: "جزر", english: "carrot", pronunciation: "كاروت" },
+            { arabic: "خيار", english: "cucumber", pronunciation: "كيوكامبر" },
+            { arabic: "طماطم", english: "tomato", pronunciation: "توماتو" },
+            { arabic: "بصل", english: "onion", pronunciation: "أنيون" },
+            { arabic: "ثوم", english: "garlic", pronunciation: "جارليك" },
+            { arabic: "بطاطس", english: "potato", pronunciation: "بوتيتو" },
+            { arabic: "فلفل", english: "pepper", pronunciation: "بيبر" },
+            { arabic: "خس", english: "lettuce", pronunciation: "ليتس" },
+            { arabic: "ملفوف", english: "cabbage", pronunciation: "كابيج" },
+            { arabic: "بروكلي", english: "broccoli", pronunciation: "بروكلي" },
+            { arabic: "كرة", english: "ball", pronunciation: "بول" },
+            { arabic: "مضرب", english: "racket", pronunciation: "راكت" },
+            { arabic: "حذاء رياضي", english: "sneakers", pronunciation: "سنيكرز" },
+            { arabic: "ملابس رياضية", english: "sportswear", pronunciation: "سبورتس وير" },
+            { arabic: "ميدالية", english: "medal", pronunciation: "ميدل" },
+            { arabic: "كأس", english: "cup", pronunciation: "كاب" },
+            { arabic: "تزلج", english: "skiing", pronunciation: "سكيينغ" },
+            { arabic: "سباحة", english: "swimming", pronunciation: "سويمينغ" },
+            { arabic: "ركض", english: "running", pronunciation: "رنينغ" },
+            { arabic: "قفز", english: "jumping", pronunciation: "جامبينغ" },
+            { arabic: "طالب", english: "student", pronunciation: "ستيودنت" },
+            { arabic: "معلم", english: "teacher", pronunciation: "تيشر" },
+            { arabic: "صف", english: "class", pronunciation: "كلاس" },
+            { arabic: "سبورة", english: "blackboard", pronunciation: "بلاك بورد" },
+            { arabic: "محفظة", english: "backpack", pronunciation: "باك باك" },
+            { arabic: "امتحان", english: "exam", pronunciation: "إيجزام" },
+            { arabic: "واجب", english: "homework", pronunciation: "هوم ورك" },
+            { arabic: "كتاب مدرسي", english: "textbook", pronunciation: "تيكست بوك" },
+            { arabic: "مختبر", english: "laboratory", pronunciation: "لابوراتوري" },
+            { arabic: "مدرسة", english: "school", pronunciation: "سكول" },
+            { arabic: "طبيب", english: "doctor", pronunciation: "دكتور" },
+            { arabic: "ممرضة", english: "nurse", pronunciation: "نرس" },
+            { arabic: "مريض", english: "patient", pronunciation: "بيشنت" },
+            { arabic: "مستشفى", english: "hospital", pronunciation: "هوسبيتل" },
+            { arabic: "جراحة", english: "surgery", pronunciation: "سيرجري" },
+            { arabic: "دواء", english: "medicine", pronunciation: "مديسين" },
+            { arabic: "حقنة", english: "injection", pronunciation: "إنجكشن" },
+            { arabic: "مشرط", english: "scalpel", pronunciation: "سكالبل" },
+            { arabic: "سماعة طبيب", english: "stethoscope", pronunciation: "ستيثوسكوب" },
+            { arabic: "سرير", english: "bed", pronunciation: "بد" },
+            { arabic: "هاتف", english: "phone", pronunciation: "فون" },
+            { arabic: "حاسوب", english: "computer", pronunciation: "كمبيوتر" },
+            { arabic: "لوحة مفاتيح", english: "keyboard", pronunciation: "كي بورد" },
+            { arabic: "فأرة", english: "mouse", pronunciation: "ماوس" },
+            { arabic: "شاشة", english: "screen", pronunciation: "سكرين" },
+            { arabic: "طابعة", english: "printer", pronunciation: "برينتر" },
+            { arabic: "كاميرا", english: "camera", pronunciation: "كاميرا" },
+            { arabic: "إنترنت", english: "internet", pronunciation: "إنترنت" },
+            { arabic: "برنامج", english: "program", pronunciation: "بروجرام" },
+            { arabic: "تطبيق", english: "application", pronunciation: "أبليكيشن" },
+            { arabic: "قميص", english: "shirt", pronunciation: "شرت" },
+            { arabic: "بنطال", english: "pants", pronunciation: "بانتس" },
+            { arabic: "جاكيت", english: "jacket", pronunciation: "جاكيت" },
+            { arabic: "معطف", english: "coat", pronunciation: "كوت" },
+            { arabic: "فستان", english: "dress", pronunciation: "دريس" },
+            { arabic: "تنورة", english: "skirt", pronunciation: "سكيرت" },
+            { arabic: "جوارب", english: "socks", pronunciation: "سوكس" },
+            { arabic: "حذاء", english: "shoes", pronunciation: "شوز" },
+            { arabic: "قبعة", english: "hat", pronunciation: "هات" },
+            { arabic: "قفازات", english: "gloves", pronunciation: "جلافز" },
+            { arabic: "أب", english: "father", pronunciation: "فاذر" },
+            { arabic: "أم", english: "mother", pronunciation: "ماذر" },
+            { arabic: "ابن", english: "son", pronunciation: "صن" },
+            { arabic: "ابنة", english: "daughter", pronunciation: "دوتير" },
+            { arabic: "أخ", english: "brother", pronunciation: "براذر" },
+            { arabic: "أخت", english: "sister", pronunciation: "سيستر" },
+            { arabic: "جد", english: "grandfather", pronunciation: "جراند فاذر" },
+            { arabic: "جدة", english: "grandmother", pronunciation: "جراند ماذر" },
+            { arabic: "عم", english: "uncle", pronunciation: "انكل" },
+            { arabic: "عمة", english: "aunt", pronunciation: "انت" },
+            { arabic: "ثانية", english: "second", pronunciation: "سيكند" },
+            { arabic: "دقيقة", english: "minute", pronunciation: "مينيت" },
+            { arabic: "ساعة", english: "hour", pronunciation: "آور" },
+            { arabic: "يوم", english: "day", pronunciation: "داي" },
+            { arabic: "أسبوع", english: "week", pronunciation: "ويك" },
+            { arabic: "شهر", english: "month", pronunciation: "مانث" },
+            { arabic: "سنة", english: "year", pronunciation: "يير" },
+            { arabic: "صباح", english: "morning", pronunciation: "مورنينغ" },
+            { arabic: "ظهر", english: "afternoon", pronunciation: "آفترنون" },
+            { arabic: "مساء", english: "evening", pronunciation: "إيفنينغ" },
+            { arabic: "أحمر", english: "red", pronunciation: "ريد" },
+            { arabic: "أزرق", english: "blue", pronunciation: "بلو" },
+            { arabic: "أخضر", english: "green", pronunciation: "جرين" },
+            { arabic: "أصفر", english: "yellow", pronunciation: "يلو" },
+            { arabic: "برتقالي", english: "orange", pronunciation: "أورينج" },
+            { arabic: "بنفسجي", english: "purple", pronunciation: "بربل" },
+            { arabic: "وردي", english: "pink", pronunciation: "بينك" },
+            { arabic: "بني", english: "brown", pronunciation: "براون" },
+            { arabic: "أسود", english: "black", pronunciation: "بلاك" },
+            { arabic: "أبيض", english: "white", pronunciation: "وايت" },
+            { arabic: "سعيد", english: "happy", pronunciation: "هابي" },
+            { arabic: "حزين", english: "sad", pronunciation: "ساد" },
+            { arabic: "غاضب", english: "angry", pronunciation: "انجري" },
+            { arabic: "خائف", english: "scared", pronunciation: "سكرد" },
+            { arabic: "مندهش", english: "surprised", pronunciation: "سربريزد" },
+            { arabic: "متعب", english: "tired", pronunciation: "تايرد" },
+            { arabic: "مرتاح", english: "relaxed", pronunciation: "ريلاكسد" },
+            { arabic: "قلق", english: "anxious", pronunciation: "انكشس" },
+            { arabic: "متحمس", english: "excited", pronunciation: "إكسايتد" },
+            { arabic: "محبط", english: "frustrated", pronunciation: "فراستريتد" },
+            { arabic: "وجبة", english: "meal", pronunciation: "ميل" },
+            { arabic: "فطور", english: "breakfast", pronunciation: "بريكفاست" },
+            { arabic: "غداء", english: "lunch", pronunciation: "لانش" },
+            { arabic: "عشاء", english: "dinner", pronunciation: "دينر" },
+            { arabic: "ساندويتش", english: "sandwich", pronunciation: "ساندويتش" },
+            { arabic: "سلطة", english: "salad", pronunciation: "سيلاد" },
+            { arabic: "حساء", english: "soup", pronunciation: "سوب" },
+            { arabic: "بيتزا", english: "pizza", pronunciation: "بيتزا" },
+            { arabic: "هامبرغر", english: "hamburger", pronunciation: "هامبرغر" },
+            { arabic: "معكرونة", english: "pasta", pronunciation: "باستا" },
+            { arabic: "ماء", english: "water", pronunciation: "واتر" },
+            { arabic: "عصير", english: "juice", pronunciation: "جوس" },
+            { arabic: "قهوة", english: "coffee", pronunciation: "كوفي" },
+            { arabic: "شاي", english: "tea", pronunciation: "تي" },
+            { arabic: "حليب", english: "milk", pronunciation: "ميلك" },
+            { arabic: "مشروب غازي", english: "soda", pronunciation: "سودا" },
+            { arabic: "ليموناضة", english: "lemonade", pronunciation: "ليمونيد" },
+            { arabic: "كاكاو", english: "cocoa", pronunciation: "كوكو" },
+            { arabic: "شوكولاتة ساخنة", english: "hot chocolate", pronunciation: "هوت تشوكلت" },
+            { arabic: "مشروب طاقة", english: "energy drink", pronunciation: "انرجي درينك" },
+            { arabic: "غرفة", english: "room", pronunciation: "روم" },
+            { arabic: "مطبخ", english: "kitchen", pronunciation: "كيتشن" },
+            { arabic: "حمام", english: "bathroom", pronunciation: "باثروم" },
+            { arabic: "صالة", english: "living room", pronunciation: "ليفينغ روم" },
+            { arabic: "غرفة نوم", english: "bedroom", pronunciation: "بدروم" },
+            { arabic: "حديقة", english: "garden", pronunciation: "جاردن" },
+            { arabic: "سقف", english: "roof", pronunciation: "روف" },
+            { arabic: "باب", english: "door", pronunciation: "دور" },
+            { arabic: "نافذة", english: "window", pronunciation: "ويندو" },
+            { arabic: "سلم", english: "stairs", pronunciation: "ستيرز" },
+            { arabic: "شارع", english: "street", pronunciation: "ستريت" },
+            { arabic: "ميدان", english: "square", pronunciation: "سكوير" },
+            { arabic: "جسر", english: "bridge", pronunciation: "بريدج" },
+            { arabic: "حديقة عامة", english: "park", pronunciation: "بارك" },
+            { arabic: "محطة قطار", english: "train station", pronunciation: "ترين ستيشن" },
+            { arabic: "مطار", english: "airport", pronunciation: "ايربورت" },
+            { arabic: "مستشفى", english: "hospital", pronunciation: "هوسبيتل" },
+            { arabic: "مدرسة", english: "school", pronunciation: "سكول" },
+            { arabic: "جامعة", english: "university", pronunciation: "يونيفيرستي" },
+            { arabic: "سوق", english: "market", pronunciation: "ماركت" },
+            { arabic: "حار", english: "hot", pronunciation: "هوت" },
+            { arabic: "بارد", english: "cold", pronunciation: "كولد" },
+            { arabic: "دافئ", english: "warm", pronunciation: "ورم" },
+            { arabic: "معتدل", english: "mild", pronunciation: "مايلد" },
+            { arabic: "مشمس", english: "sunny", pronunciation: "صاني" },
+            { arabic: "غائم", english: "cloudy", pronunciation: "كلودي" },
+            { arabic: "ممطر", english: "rainy", pronunciation: "ريني" },
+            { arabic: "ثلجي", english: "snowy", pronunciation: "سنوي" },
+            { arabic: "عاصف", english: "windy", pronunciation: "ويندي" },
+            { arabic: "رطب", english: "humid", pronunciation: "هيوميد" },
+            { arabic: "قراءة", english: "reading", pronunciation: "ريدينغ" },
+            { arabic: "كتابة", english: "writing", pronunciation: "رايتينغ" },
+            { arabic: "رسم", english: "drawing", pronunciation: "دراوينغ" },
+            { arabic: "غناء", english: "singing", pronunciation: "سينغينغ" },
+            { arabic: "رقص", english: "dancing", pronunciation: "دانسينغ" },
+            { arabic: "تصوير", english: "photography", pronunciation: "فوتوغرافي" },
+            { arabic: "طبخ", english: "cooking", pronunciation: "كوكينغ" },
+            { arabic: "خياطة", english: "sewing", pronunciation: "سوينغ" },
+            { arabic: "بستنة", english: "gardening", pronunciation: "جاردنينغ" },
+            { arabic: "صيد", english: "fishing", pronunciation: "فيشينغ" },
+            { arabic: "رئيس", english: "president", pronunciation: "بريزيدنت" },
+            { arabic: "حكومة", english: "government", pronunciation: "جافيرنمينت" },
+            { arabic: "وزير", english: "minister", pronunciation: "مينيستر" },
+            { arabic: "انتخابات", english: "elections", pronunciation: "إلكشنز" },
+            { arabic: "قانون", english: "law", pronunciation: "لو" },
+            { arabic: "برلمان", english: "parliament", pronunciation: "بارليمنت" },
+            { arabic: "سياسة", english: "policy", pronunciation: "بوليسي" },
+            { arabic: "ديمقراطية", english: "democracy", pronunciation: "ديموكراسي" },
+            { arabic: "حقوق", english: "rights", pronunciation: "رايتس" },
+            { arabic: "واجبات", english: "duties", pronunciation: "ديوتيز" },
+            { arabic: "مال", english: "money", pronunciation: "ماني" },
+            { arabic: "بنك", english: "bank", pronunciation: "بانك" },
+            { arabic: "عملة", english: "currency", pronunciation: "كرنسي" },
+            { arabic: "سعر", english: "price", pronunciation: "برايس" },
+            { arabic: "تكلفة", english: "cost", pronunciation: "كوست" },
+            { arabic: "استثمار", english: "investment", pronunciation: "إنفستمنت" },
+            { arabic: "تجارة", english: "trade", pronunciation: "ترايد" },
+            { arabic: "سوق", english: "market", pronunciation: "ماركت" },
+            { arabic: "شركة", english: "company", pronunciation: "كومباني" },
+            { arabic: "مشروع", english: "project", pronunciation: "بروجكت" },
+            { arabic: "فيزياء", english: "physics", pronunciation: "فيزيكس" },
+            { arabic: "كيمياء", english: "chemistry", pronunciation: "كيمستري" },
+            { arabic: "أحياء", english: "biology", pronunciation: "بايلوجي" },
+            { arabic: "رياضيات", english: "mathematics", pronunciation: "ماثماتكس" },
+            { arabic: "جيولوجيا", english: "geology", pronunciation: "جيولوجي" },
+            { arabic: "فلك", english: "astronomy", pronunciation: "أسترونومي" },
+            { arabic: "طب", english: "medicine", pronunciation: "مديسين" },
+            { arabic: "هندسة", english: "engineering", pronunciation: "إنجينيرينغ" },
+            { arabic: "تكنولوجيا", english: "technology", pronunciation: "تكنولوجي" },
+            { arabic: "بحث", english: "research", pronunciation: "ريسيرش" },
+            { arabic: "رسم", english: "painting", pronunciation: "بينتينغ" },
+            { arabic: "نحت", english: "sculpture", pronunciation: "سكالبشر" },
+            { arabic: "موسيقى", english: "music", pronunciation: "ميوزيك" },
+            { arabic: "رقص", english: "dance", pronunciation: "دانس" },
+            { arabic: "مسرح", english: "theater", pronunciation: "ثيتر" },
+            { arabic: "سينما", english: "cinema", pronunciation: "سينما" },
+            { arabic: "تصوير", english: "photography", pronunciation: "فوتوغرافي" },
+            { arabic: "أدب", english: "literature", pronunciation: "ليتريشر" },
+            { arabic: "شعر", english: "poetry", pronunciation: "بويتري" },
+            { arabic: "رواية", english: "novel", pronunciation: "نوفل" },
+            { arabic: "كرة قدم", english: "football", pronunciation: "فوتبول" },
+            { arabic: "كرة سلة", english: "basketball", pronunciation: "باسكت بول" },
+            { arabic: "كرة طائرة", english: "volleyball", pronunciation: "فوليبول" },
+            { arabic: "تنس", english: "tennis", pronunciation: "تنس" },
+            { arabic: "سباحة", english: "swimming", pronunciation: "سويمينغ" },
+            { arabic: "جري", english: "running", pronunciation: "رنينغ" },
+            { arabic: "قفز", english: "jumping", pronunciation: "جامبينغ" },
+            { arabic: "ركوب الدراجات", english: "cycling", pronunciation: "سايكلينغ" },
+            { arabic: "ملاكمة", english: "boxing", pronunciation: "بوكسينغ" },
+            { arabic: "جمباز", english: "gymnastics", pronunciation: "جمناستيكس" },
+            { arabic: "سفر", english: "travel", pronunciation: "ترافل" },
+            { arabic: "سياحة", english: "tourism", pronunciation: "توريزم" },
+            { arabic: "فندق", english: "hotel", pronunciation: "هوتيل" },
+            { arabic: "مطعم", english: "restaurant", pronunciation: "ريستورانت" },
+            { arabic: "معلم سياحي", english: "landmark", pronunciation: "لاند مارك" },
+            { arabic: "خريطة", english: "map", pronunciation: "ماب" },
+            { arabic: "دليل سياحي", english: "guide", pronunciation: "جايد" },
+            { arabic: "جولة", english: "tour", pronunciation: "تور" },
+            { arabic: "تذكرة", english: "ticket", pronunciation: "تيكيت" },
+            { arabic: "جواز سفر", english: "passport", pronunciation: "باسبورت" },
+            { arabic: "طبيعة", english: "nature", pronunciation: "نيشر" },
+            { arabic: "شجرة", english: "tree", pronunciation: "تري" },
+            { arabic: "زهرة", english: "flower", pronunciation: "فلاور" },
+            { arabic: "نبات", english: "plant", pronunciation: "بلانت" },
+            { arabic: "حيوان", english: "animal", pronunciation: "أنيمال" },
+            { arabic: "غابة", english: "forest", pronunciation: "فورست" },
+            { arabic: "صحراء", english: "desert", pronunciation: "ديزرت" },
+            { arabic: "جبل", english: "mountain", pronunciation: "ماونتن" },
+            { arabic: "نهر", english: "river", pronunciation: "ريفر" },
+            { arabic: "بحر", english: "sea", pronunciation: "سي" },
+            { arabic: "صحة", english: "health", pronunciation: "هيلث" },
+            { arabic: "مرض", english: "disease", pronunciation: "ديزيز" },
+            { arabic: "علاج", english: "treatment", pronunciation: "تريتمنت" },
+            { arabic: "دواء", english: "medicine", pronunciation: "مديسين" },
+            { arabic: "جراحة", english: "surgery", pronunciation: "سيرجري" },
+            { arabic: "فحص", english: "checkup", pronunciation: "تشيك أب" },
+            { arabic: "تحليل", english: "analysis", pronunciation: "أناليسس" },
+            { arabic: "وقاية", english: "prevention", pronunciation: "بريفينشن" },
+            { arabic: "نظام غذائي", english: "diet", pronunciation: "دايت" },
+            { arabic: "تمارين", english: "exercises", pronunciation: "إكسيرسايزز" },
+            { arabic: "مدرسة", english: "school", pronunciation: "سكول" },
+            { arabic: "جامعة", english: "university", pronunciation: "يونيفيرستي" },
+            { arabic: "طالب", english: "student", pronunciation: "ستيودنت" },
+            { arabic: "معلم", english: "teacher", pronunciation: "تيشر" },
+            { arabic: "كتاب", english: "book", pronunciation: "بوك" },
+            { arabic: "دفتر", english: "notebook", pronunciation: "نوت بوك" },
+            { arabic: "قلم", english: "pen", pronunciation: "بن" },
+            { arabic: "امتحان", english: "exam", pronunciation: "إيجزام" },
+            { arabic: "درجة", english: "grade", pronunciation: "جرايد" },
+            { arabic: "بحث", english: "research", pronunciation: "ريسيرش" },
+            { arabic: "وظيفة", english: "job", pronunciation: "جوب" },
+            { arabic: "عمل", english: "work", pronunciation: "ورك" },
+            { arabic: "موظف", english: "employee", pronunciation: "إمبلوي" },
+            { arabic: "مدير", english: "manager", pronunciation: "مانيجر" },
+            { arabic: "مكتب", english: "office", pronunciation: "أوفيس" },
+            { arabic: "اجتماع", english: "meeting", pronunciation: "ميتينغ" },
+            { arabic: "مشروع", english: "project", pronunciation: "بروجكت" },
+            { arabic: "راتب", english: "salary", pronunciation: "سالاري" },
+            { arabic: "إجازة", english: "vacation", pronunciation: "فاكيشن" },
+            { arabic: "تقاعد", english: "retirement", pronunciation: "ريتايرمنت" },
+            { arabic: "هاتف", english: "phone", pronunciation: "فون" },
+            { arabic: "رسالة", english: "message", pronunciation: "ميسج" },
+            { arabic: "بريد إلكتروني", english: "email", pronunciation: "إيميل" },
+            { arabic: "إنترنت", english: "internet", pronunciation: "إنترنت" },
+            { arabic: "شبكة", english: "network", pronunciation: "نتورك" },
+            { arabic: "اتصال", english: "connection", pronunciation: "كونكشن" },
+            { arabic: "محادثة", english: "conversation", pronunciation: "كونفرسيشن" },
+            { arabic: "مكالمة", english: "call", pronunciation: "كول" },
+            { arabic: "فيديو", english: "video", pronunciation: "فيديو" },
+            { arabic: "صورة", english: "image", pronunciation: "إيمج" },
+            { arabic: "حاسوب", english: "computer", pronunciation: "كمبيوتر" },
+            { arabic: "لوحة مفاتيح", english: "keyboard", pronunciation: "كي بورد" },
+            { arabic: "فأرة", english: "mouse", pronunciation: "ماوس" },
+            { arabic: "شاشة", english: "screen", pronunciation: "سكرين" },
+            { arabic: "طابعة", english: "printer", pronunciation: "برينتر" },
+            { arabic: "برنامج", english: "program", pronunciation: "بروجرام" },
+            { arabic: "ملف", english: "file", pronunciation: "فايل" },
+            { arabic: "مجلد", english: "folder", pronunciation: "فولدر" },
+            { arabic: "إنترنت", english: "internet", pronunciation: "إنترنت" },
+            { arabic: "موقع", english: "website", pronunciation: "وب سايت" },
+            { arabic: "سيارة", english: "car", pronunciation: "كار" },
+            { arabic: "عجلة", english: "wheel", pronunciation: "ويل" },
+            { arabic: "محرك", english: "engine", pronunciation: "إنجين" },
+            { arabic: "بنزين", english: "gasoline", pronunciation: "غازولين" },
+            { arabic: "إطار", english: "tire", pronunciation: "تاير" },
+            { arabic: "فرامل", english: "brakes", pronunciation: "بريكس" },
+            { arabic: "مقود", english: "steering wheel", pronunciation: "ستيرينغ ويل" },
+            { arabic: "مقعد", english: "seat", pronunciation: "سيت" },
+            { arabic: "زجاج أمامي", english: "windshield", pronunciation: "ويندشيلد" },
+            { arabic: "مصباح", english: "headlight", pronunciation: "هيدلايت" },
+            { arabic: "طائرة", english: "airplane", pronunciation: "إيربلين" },
+            { arabic: "مطار", english: "airport", pronunciation: "إيربورت" },
+            { arabic: "رحلة", english: "flight", pronunciation: "فلايت" },
+            { arabic: "تذكرة", english: "ticket", pronunciation: "تيكيت" },
+            { arabic: "مقعد", english: "seat", pronunciation: "سيت" },
+            { arabic: "طيار", english: "pilot", pronunciation: "بايلوت" },
+            { arabic: "مضيفة", english: "flight attendant", pronunciation: "فلايت أتيندنت" },
+            { arabic: "حقائب", english: "luggage", pronunciation: "لاجيج" },
+            { arabic: "جواز سفر", english: "passport", pronunciation: "باسبورت" },
+            { arabic: "تأشيرة", english: "visa", pronunciation: "فيزا" },
+            { arabic: "قطار", english: "train", pronunciation: "ترين" },
+            { arabic: "محطة قطار", english: "train station", pronunciation: "ترين ستيشن" },
+            { arabic: "تذكرة", english: "ticket", pronunciation: "تيكيت" },
+            { arabic: "مسار", english: "track", pronunciation: "تراك" },
+            { arabic: "عربة", english: "carriage", pronunciation: "كاريج" },
+            { arabic: "مقعد", english: "seat", pronunciation: "سيت" },
+            { arabic: "نافذة", english: "window", pronunciation: "ويندو" },
+            { arabic: "باب", english: "door", pronunciation: "دور" },
+            { arabic: "رحلة", english: "trip", pronunciation: "تريب" },
+            { arabic: "جدول", english: "schedule", pronunciation: "شيدول" },
+            { arabic: "سفينة", english: "ship", pronunciation: "شيب" },
+            { arabic: "ميناء", english: "port", pronunciation: "بورت" },
+            { arabic: "رحلة بحرية", english: "cruise", pronunciation: "كروز" },
+            { arabic: "قبطان", english: "captain", pronunciation: "كابتن" },
+            { arabic: "طاقم", english: "crew", pronunciation: "كرو" },
+            { arabic: "سطح", english: "deck", pronunciation: "ديك" },
+            { arabic: "مرساة", english: "anchor", pronunciation: "انكر" },
+            { arabic: "شراع", english: "sail", pronunciation: "سيل" },
+            { arabic: "قارب", english: "boat", pronunciation: "بوت" },
+            { arabic: "يخت", english: "yacht", pronunciation: "يات" },
+            { arabic: "ربيع", english: "spring", pronunciation: "سبرينغ" },
+            { arabic: "صيف", english: "summer", pronunciation: "سامر" },
+            { arabic: "خريف", english: "autumn", pronunciation: "أوتوم" },
+            { arabic: "شتاء", english: "winter", pronunciation: "وينتر" },
+            { arabic: "حرارة", english: "heat", pronunciation: "هيت" },
+            { arabic: "برودة", english: "cold", pronunciation: "كولد" },
+            { arabic: "مطر", english: "rain", pronunciation: "رين" },
+            { arabic: "ثلج", english: "snow", pronunciation: "سنو" },
+            { arabic: "ريح", english: "wind", pronunciation: "ويند" },
+            { arabic: "عاصفة", english: "storm", pronunciation: "ستورم" },
+            { arabic: "عيد ميلاد", english: "birthday", pronunciation: "بيرثداي" },
+            { arabic: "عيد زواج", english: "anniversary", pronunciation: "أنيفيرساري" },
+            { arabic: "عيد فطر", english: "Eid al-Fitr", pronunciation: "عيد الفطر" },
+            { arabic: "عيد أضحى", english: "Eid al-Adha", pronunciation: "عيد الأضحى" },
+            { arabic: "كريسماس", english: "Christmas", pronunciation: "كريسماس" },
+            { arabic: "رأس السنة", english: "New Year", pronunciation: "نيو يير" },
+            { arabic: "هدية", english: "gift", pronunciation: "جيفت" },
+            { arabic: "احتفال", english: "celebration", pronunciation: "سيليبرايشن" },
+            { arabic: "كعكة", english: "cake", pronunciation: "كيك" },
+            { arabic: "شموع", english: "candles", pronunciation: "كاندلز" },
+            { arabic: "إسلام", english: "Islam", pronunciation: "إسلام" },
+            { arabic: "مسيحية", english: "Christianity", pronunciation: "كريستيانيتي" },
+            { arabic: "يهودية", english: "Judaism", pronunciation: "جودايزم" },
+            { arabic: "بوذية", english: "Buddhism", pronunciation: "بوديزم" },
+            { arabic: "هندوسية", english: "Hinduism", pronunciation: "هندويزم" },
+            { arabic: "أغنية", english: "song", pronunciation: "سونغ" },
+            { arabic: "موسيقى", english: "music", pronunciation: "ميوزيك" },
+            { arabic: "رقص", english: "dance", pronunciation: "دانس" },
+            { arabic: "رسم", english: "drawing", pronunciation: "دراوينغ" },
+            { arabic: "لوحة", english: "painting", pronunciation: "بينتينغ" },
+            { arabic: "تصوير", english: "photography", pronunciation: "فوتوغرافي" },
+            { arabic: "فيلم", english: "movie", pronunciation: "موفي" },
+            { arabic: "مسلسل", english: "series", pronunciation: "سيريز" },
+            { arabic: "مسرح", english: "theater", pronunciation: "ثيتر" },
+            { arabic: "حفل", english: "concert", pronunciation: "كونسرت" },
+            { arabic: "معرض", english: "exhibition", pronunciation: "إكزيبيشن" },
+            { arabic: "متحف", english: "museum", pronunciation: "ميوزيم" },
+            { arabic: "حديقة", english: "park", pronunciation: "بارك" },
+            { arabic: "ملعب", english: "stadium", pronunciation: "ستاديوم" },
+            { arabic: "نادي", english: "club", pronunciation: "كلاب" },
+            { arabic: "مسبح", english: "swimming pool", pronunciation: "سويمينغ بول" },
+            { arabic: "ملعب كرة قدم", english: "football field", pronunciation: "فوتبول فيلد" },
+            { arabic: "ملعب تنس", english: "tennis court", pronunciation: "تنس كورت" },
+            { arabic: "ملعب جولف", english: "golf course", pronunciation: "جولف كورس" },
+            { arabic: "صالة ألعاب", english: "gym", pronunciation: "جيم" },
+            { arabic: "رياضة", english: "sport", pronunciation: "سبورت" },
+            { arabic: "كرة قدم", english: "football", pronunciation: "فوتبول" },
+            { arabic: "كرة سلة", english: "basketball", pronunciation: "باسكت بول" },
+            { arabic: "كرة طائرة", english: "volleyball", pronunciation: "فوليبول" },
+            { arabic: "تنس", english: "tennis", pronunciation: "تنس" },
+            { arabic: "سباحة", english: "swimming", pronunciation: "سويمينغ" },
+            { arabic: "ركض", english: "running", pronunciation: "رنينغ" },
+            { arabic: "قفز", english: "jumping", pronunciation: "جامبينغ" },
+            { arabic: "دراجة", english: "bicycle", pronunciation: "بايسكل" },
+            { arabic: "سيارة", english: "car", pronunciation: "كار" },
+            { arabic: "حافلة", english: "bus", pronunciation: "باص" },
+            { arabic: "قطار", english: "train", pronunciation: "ترين" },
+            { arabic: "طائرة", english: "airplane", pronunciation: "إيربلين" },
+            { arabic: "سفينة", english: "ship", pronunciation: "شيب" },
+            { arabic: "دراجة نارية", english: "motorcycle", pronunciation: "موتورسايكل" },
+            { arabic: "سيارة أجرة", english: "taxi", pronunciation: "تاكسي" },
+            { arabic: "مترو", english: "subway", pronunciation: "سابوي" },
+            { arabic: "ميناء", english: "port", pronunciation: "بورت" },
+            { arabic: "مطار", english: "airport", pronunciation: "إيربورت" },
+            { arabic: "محطة قطار", english: "train station", pronunciation: "ترين ستيشن" },
+            { arabic: "محطة حافلات", english: "bus station", pronunciation: "باص ستيشن" },
+            { arabic: "شارع", english: "street", pronunciation: "ستريت" },
+            { arabic: "طريق", english: "road", pronunciation: "رود" },
+            { arabic: "جسر", english: "bridge", pronunciation: "بريدج" },
+            { arabic: "نفق", english: "tunnel", pronunciation: "تونل" },
+            { arabic: "إشارة مرور", english: "traffic light", pronunciation: "ترافيك لايت" },
+            { arabic: "زحام", english: "traffic jam", pronunciation: "ترافيك جام" },
+            { arabic: "وقود", english: "fuel", pronunciation: "فيول" },
+            { arabic: "بنزين", english: "gasoline", pronunciation: "غازولين" },
+            { arabic: "محرك", english: "engine", pronunciation: "إنجين" },
+            { arabic: "إطار", english: "tire", pronunciation: "تاير" },
+            { arabic: "فرامل", english: "brakes", pronunciation: "بريكس" },
+            { arabic: "مقود", english: "steering wheel", pronunciation: "ستيرينغ ويل" },
+            { arabic: "مقعد", english: "seat", pronunciation: "سيت" },
+            { arabic: "حزام أمان", english: "seat belt", pronunciation: "سيت بيلت" },
+            { arabic: "زجاج أمامي", english: "windshield", pronunciation: "ويندشيلد" },
+            { arabic: "مرآة", english: "mirror", pronunciation: "ميرور" },
+            { arabic: "مصباح", english: "headlight", pronunciation: "هيدلايت" },
+            { arabic: "صوت", english: "horn", pronunciation: "هورن" },
+            { arabic: "بطارية", english: "battery", pronunciation: "باتري" },
+            { arabic: "مفتاح", english: "key", pronunciation: "كي" },
+            { arabic: "قفل", english: "lock", pronunciation: "لوك" },
+            { arabic: "سيارة إسعاف", english: "ambulance", pronunciation: "أمبولانس" },
+            { arabic: "سيارة إطفاء", english: "fire truck", pronunciation: "فاير تراك" },
+            { arabic: "شرطة", english: "police", pronunciation: "بوليس" },
+            { arabic: "شرطي", english: "policeman", pronunciation: "بوليس مان" },
+            { arabic: "حراسة", english: "security", pronunciation: "سكيوريتي" },
+            { arabic: "حارس", english: "guard", pronunciation: "غارد" },
+            { arabic: "جريمة", english: "crime", pronunciation: "كرايم" },
+            { arabic: "لص", english: "thief", pronunciation: "ثيف" },
+            { arabic: "سرقة", english: "theft", pronunciation: "ثيفت" },
+            { arabic: "قتل", english: "murder", pronunciation: "موردر" },
+            { arabic: "سجن", english: "prison", pronunciation: "برزن" },
+            { arabic: "محكمة", english: "court", pronunciation: "كورت" },
+            { arabic: "قاضي", english: "judge", pronunciation: "جاج" },
+            { arabic: "محامي", english: "lawyer", pronunciation: "لوير" },
+            { arabic: "شاهد", english: "witness", pronunciation: "ويتنس" },
+            { arabic: "دليل", english: "evidence", pronunciation: "إفيدنس" },
+            { arabic: "تحقيق", english: "investigation", pronunciation: "إنفيستيغيشن" },
+            { arabic: "تحري", english: "inquiry", pronunciation: "إنكوايري" },
+            { arabic: "قانون", english: "law", pronunciation: "لو" },
+            { arabic: "حق", english: "right", pronunciation: "رايت" },
+            { arabic: "واجب", english: "duty", pronunciation: "ديوتي" },
+            { arabic: "عدالة", english: "justice", pronunciation: "جاستس" },
+            { arabic: "حقيقة", english: "truth", pronunciation: "تروث" },
+            { arabic: "كذب", english: "lie", pronunciation: "لاي" },
+            { arabic: "صدق", english: "honesty", pronunciation: "أونستي" },
+            { arabic: "أمانة", english: "integrity", pronunciation: "إنتيغريتي" },
+            { arabic: "شرف", english: "honor", pronunciation: "أونور" },
+            { arabic: "احترام", english: "respect", pronunciation: "ريسپكت" },
+            { arabic: "حب", english: "love", pronunciation: "لاف" },
+            { arabic: "كراهية", english: "hate", pronunciation: "هيت" },
+            { arabic: "صداقة", english: "friendship", pronunciation: "فريندشيب" },
+            { arabic: "عداوة", english: "enmity", pronunciation: "إنميتي" },
+            { arabic: "سلام", english: "peace", pronunciation: "پيس" },
+            { arabic: "حرب", english: "war", pronunciation: "ور" },
+            { arabic: "نصر", english: "victory", pronunciation: "فاكتوري" },
+            { arabic: "هزيمة", english: "defeat", pronunciation: "ديفيت" },
+            { arabic: "جيش", english: "army", pronunciation: "آرمي" },
+            { arabic: "جندي", english: "soldier", pronunciation: "سولدير" },
+            { arabic: "سلاح", english: "weapon", pronunciation: "ويپن" },
+            { arabic: "رصاص", english: "bullet", pronunciation: "بوليت" },
+            { arabic: "دبابة", english: "tank", pronunciation: "تانك" },
+            { arabic: "طائرة حربية", english: "fighter jet", pronunciation: "فايتر جت" },
+            { arabic: "سفينة حربية", english: "warship", pronunciation: "ورشيب" },
+            { arabic: "صاروخ", english: "missile", pronunciation: "ميسايل" },
+            { arabic: "قنبلة", english: "bomb", pronunciation: "بوم" },
+            { arabic: "تفجير", english: "explosion", pronunciation: "إكسبلوجن" },
+            { arabic: "إرهاب", english: "terrorism", pronunciation: "تيرورزم" },
+            { arabic: "إرهابي", english: "terrorist", pronunciation: "تيرورست" },
+            { arabic: "أمن", english: "security", pronunciation: "سكيوريتي" },
+            { arabic: "استخبارات", english: "intelligence", pronunciation: "إنتلجنس" },
+            { arabic: "جواسيس", english: "spies", pronunciation: "سپايز" },
+            { arabic: "سرية", english: "secrecy", pronunciation: "سيكرسي" },
+            { arabic: "معلومات", english: "information", pronunciation: "إنفورميشن" },
+            { arabic: "بيانات", english: "data", pronunciation: "داتا" },
+            { arabic: "حاسوب", english: "computer", pronunciation: "كمبيوتر" },
+            { arabic: "برنامج", english: "program", pronunciation: "بروجرام" },
+            { arabic: "تطبيق", english: "application", pronunciation: "أبليكيشن" },
+            { arabic: "موقع", english: "website", pronunciation: "وب سايت" },
+            { arabic: "إنترنت", english: "internet", pronunciation: "إنترنت" },
+            { arabic: "بريد إلكتروني", english: "email", pronunciation: "إيميل" },
+            { arabic: "رسالة", english: "message", pronunciation: "ميسج" },
+            { arabic: "محادثة", english: "chat", pronunciation: "تشات" },
+            { arabic: "مكالمة", english: "call", pronunciation: "كول" },
+            { arabic: "فيديو", english: "video", pronunciation: "فيديو" },
+            { arabic: "صورة", english: "image", pronunciation: "إيمج" },
+            { arabic: "صوت", english: "audio", pronunciation: "أوديو" },
+            { arabic: "موسيقى", english: "music", pronunciation: "ميوزيك" },
+            { arabic: "أغنية", english: "song", pronunciation: "سونغ" },
+            { arabic: "فيلم", english: "movie", pronunciation: "موفي" },
+            { arabic: "مسلسل", english: "series", pronunciation: "سيريز" },
+            { arabic: "وثائقي", english: "documentary", pronunciation: "دوكيومنتري" },
+            { arabic: "أخبار", english: "news", pronunciation: "نيوز" },
+            { arabic: "رياضة", english: "sports", pronunciation: "سبورتس" },
+            { arabic: "سياسة", english: "politics", pronunciation: "پوليتكس" },
+            { arabic: "اقتصاد", english: "economy", pronunciation: "إيكونومي" },
+            { arabic: "تكنولوجيا", english: "technology", pronunciation: "تكنولوجي" },
+            { arabic: "علوم", english: "science", pronunciation: "ساينس" },
+            { arabic: "طب", english: "medicine", pronunciation: "ميديسن" },
+            { arabic: "هندسة", english: "engineering", pronunciation: "إنجينيرينغ" },
+            { arabic: "تعليم", english: "education", pronunciation: "إيدكيشن" },
+            { arabic: "ثقافة", english: "culture", pronunciation: "كالتشر" },
+            { arabic: "فن", english: "art", pronunciation: "آرت" },
+            { arabic: "تاريخ", english: "history", pronunciation: "هستوري" },
+            { arabic: "جغرافيا", english: "geography", pronunciation: "جيوجرافي" },
+            { arabic: "فلسفة", english: "philosophy", pronunciation: "فيلوسوفي" },
+            { arabic: "دين", english: "religion", pronunciation: "ريلجون" },
+            { arabic: "لغة", english: "language", pronunciation: "لانجويج" },
+            { arabic: "رياضيات", english: "mathematics", pronunciation: "ماثماتكس" },
+            { arabic: "فيزياء", english: "physics", pronunciation: "فيزيكس" },
+            { arabic: "كيمياء", english: "chemistry", pronunciation: "كيمستري" },
+            { arabic: "أحياء", english: "biology", pronunciation: "بايلوجي" },
+            { arabic: "جيولوجيا", english: "geology", pronunciation: "جيولوجي" },
+            { arabic: "فلك", english: "astronomy", pronunciation: "أسترونومي" },
+            { arabic: "نفس", english: "psychology", pronunciation: "سايكولوجي" },
+            { arabic: "اجتماع", english: "sociology", pronunciation: "سوسيولوجي" },
+            { arabic: "أنثروبولوجيا", english: "anthropology", pronunciation: "أنثروبولوجي" },
+            { arabic: "آثار", english: "archeology", pronunciation: "آركيولوجي" },
+            { arabic: "قانون", english: "law", pronunciation: "لو" },
+            { arabic: "إدارة", english: "management", pronunciation: "مينجمنت" },
+            { arabic: "تسويق", english: "marketing", pronunciation: "ماركتينغ" },
+            { arabic: "مالية", english: "finance", pronunciation: "فاينانس" },
+            { arabic: "محاسبة", english: "accounting", pronunciation: "أكونتينغ" },
+            { arabic: "اقتصاد", english: "economics", pronunciation: "إيكونوميكس" },
+            { arabic: "تجارة", english: "business", pronunciation: "بيزنس" },
+            { arabic: "صناعة", english: "industry", pronunciation: "إندستري" },
+            { arabic: "زراعة", english: "agriculture", pronunciation: "أجريكالتشر" },
+            { arabic: "سياحة", english: "tourism", pronunciation: "تورزم" },
+            { arabic: "فندق", english: "hotel", pronunciation: "هوتيل" },
+            { arabic: "مطعم", english: "restaurant", pronunciation: "ريستورانت" },
+            { arabic: "مقهى", english: "cafe", pronunciation: "كافيه" },
+            { arabic: "سوق", english: "market", pronunciation: "ماركت" },
+            { arabic: "متجر", english: "store", pronunciation: "ستور" },
+            { arabic: "مركز تجاري", english: "mall", pronunciation: "مول" },
+            { arabic: "بقالة", english: "grocery", pronunciation: "جروسري" },
+            { arabic: "صيدلية", english: "pharmacy", pronunciation: "فارماسي" },
+            { arabic: "مستشفى", english: "hospital", pronunciation: "هوسپيتل" },
+            { arabic: "عيادة", english: "clinic", pronunciation: "كلينيك" },
+            { arabic: "طبيب", english: "doctor", pronunciation: "دكتور" },
+            { arabic: "ممرض", english: "nurse", pronunciation: "نرس" },
+            { arabic: "مريض", english: "patient", pronunciation: "پيشنت" },
+            { arabic: "علاج", english: "treatment", pronunciation: "تريتمنت" },
+            { arabic: "دواء", english: "medicine", pronunciation: "ميديسن" },
+            { arabic: "جراحة", english: "surgery", pronunciation: "سيرجري" },
+            { arabic: "فحص", english: "examination", pronunciation: "إكزامينيشن" },
+            { arabic: "تحليل", english: "analysis", pronunciation: "أناليسس" },
+            { arabic: "أشعة", english: "x-ray", pronunciation: "إكس راي" },
+            { arabic: "صيدلي", english: "pharmacist", pronunciation: "فارماسيست" },
+            { arabic: "وصفة", english: "prescription", pronunciation: "پريسكريپشن" },
+            { arabic: "حبوب", english: "pills", pronunciation: "پيلز" },
+            { arabic: "حقنة", english: "injection", pronunciation: "إنجكشن" },
+            { arabic: "جرعة", english: "dose", pronunciation: "دوز" },
+            { arabic: "شفاء", english: "recovery", pronunciation: "ريكفري" },
+            { arabic: "مرض", english: "disease", pronunciation: "ديزيز" },
+            { arabic: "عدوى", english: "infection", pronunciation: "إنفكشن" },
+            { arabic: "فيروس", english: "virus", pronunciation: "فايرس" },
+            { arabic: "بكتيريا", english: "bacteria", pronunciation: "بكتيريا" },
+            { arabic: "مناعة", english: "immunity", pronunciation: "إيميونيتي" },
+            { arabic: "لقاح", english: "vaccine", pronunciation: "ڤاكسين" },
+            { arabic: "وباء", english: "epidemic", pronunciation: "إيبيدميك" },
+            { arabic: "جائحة", english: "pandemic", pronunciation: "پاندميك" },
+            { arabic: "وقاية", english: "prevention", pronunciation: "پريفينشن" },
+            { arabic: "تعقيم", english: "sterilization", pronunciation: "ستريلزيشن" },
+            { arabic: "نظافة", english: "hygiene", pronunciation: "هايجين" },
+            { arabic: "غسيل", english: "washing", pronunciation: "ووشينغ" },
+            { arabic: "تعقيم", english: "disinfection", pronunciation: "ديسينفكشن" },
+            { arabic: "كمامة", english: "mask", pronunciation: "ماسك" },
+            { arabic: "قفازات", english: "gloves", pronunciation: "غلَڤز" },
+            { arabic: "معقم", english: "sanitizer", pronunciation: "سانيتايزر" },
+            { arabic: "صابون", english: "soap", pronunciation: "سوب" },
+            { arabic: "ماء", english: "water", pronunciation: "واتر" },
+            { arabic: "منظف", english: "cleaner", pronunciation: "كلينر" },
+            { arabic: "مطهر", english: "disinfectant", pronunciation: "ديسينفكتنت" },
+            { arabic: "منشفة", english: "towel", pronunciation: "تاويل" },
+            { arabic: "ورق تواليت", english: "toilet paper", pronunciation: "تواليت بيبر" },
+            { arabic: "فرشاة أسنان", english: "toothbrush", pronunciation: "توث براش" },
+            { arabic: "معجون أسنان", english: "toothpaste", pronunciation: "توث بيست" },
+            { arabic: "مشط", english: "comb", pronunciation: "كومب" },
+            { arabic: "مقص", english: "scissors", pronunciation: "سيزرز" },
+            { arabic: "ماكينة حلاقة", english: "razor", pronunciation: "ريزر" },
+            { arabic: "شفرة حلاقة", english: "razor blade", pronunciation: "ريزر بليد" },
+            { arabic: "كريم حلاقة", english: "shaving cream", pronunciation: "شيفينغ كريم" },
+            { arabic: "بخاخ", english: "spray", pronunciation: "سپري" },
+            { arabic: "عطر", english: "perfume", pronunciation: "برفيوم" },
+            { arabic: "ديهودورانت", english: "deodorant", pronunciation: "ديودورانت" },
+            { arabic: "مزيل عرق", english: "antiperspirant", pronunciation: "أنتيپيرسپيران" }
+        ];
+
+        // العناصر في الواجهة
+        const currentWordEl = document.getElementById('current-word');
+        const userAnswerEl = document.getElementById('user-answer');
+        const checkBtn = document.getElementById('check-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const showAnswerBtn = document.getElementById('show-answer-btn');
+        const resultEl = document.getElementById('result');
+        const remainingWordsEl = document.getElementById('remaining-words');
+        const correctWordsEl = document.getElementById('correct-words');
+        const wrongWordsEl = document.getElementById('wrong-words');
+        const progressEl = document.getElementById('progress');
+        const progressPercentEl = document.getElementById('progress-percent');
+        const playBtn = document.getElementById('play-btn');
+        const pronunciationEl = document.getElementById('pronunciation');
+
+        // حالة التطبيق
+        let words = [...allWords];
+        let currentWordIndex = 0;
+        let correctCount = 0;
+        let wrongCount = 0;
+        let usedIndices = new Set();
+        let currentWordObj = null;
+
+        // تهيئة التطبيق
+        function init() {
+            // تحميل التقدم المحفوظ
+            loadProgress();
+            
+            // عرض أول كلمة
+            showNextWord();
+            
+            // تحديث الإحصائيات
+            updateStats();
+        }
+
+        // تحميل التقدم المحفوظ
+        function loadProgress() {
+            const savedProgress = localStorage.getItem('wordMemorizerProgress');
+            if (savedProgress) {
+                const progress = JSON.parse(savedProgress);
+                correctCount = progress.correctCount || 0;
+                wrongCount = progress.wrongCount || 0;
+                usedIndices = new Set(progress.usedIndices || []);
+                
+                // إذا كانت جميع الكلمات قد استخدمت، نعيد تشغيل القائمة
+                if (usedIndices.size >= allWords.length) {
+                    usedIndices = new Set();
+                }
+            }
+        }
+
+        // حفظ التقدم
+        function saveProgress() {
+            const progress = {
+                correctCount,
+                wrongCount,
+                usedIndices: Array.from(usedIndices)
+            };
+            localStorage.setItem('wordMemorizerProgress', JSON.stringify(progress));
+        }
+
+        // عرض الكلمة التالية
+        function showNextWord() {
+            // إذا كانت جميع الكلمات قد استخدمت، نعيد تشغيل القائمة
+            if (usedIndices.size >= allWords.length) {
+                usedIndices = new Set();
+                alert('تهانينا! لقد عرضت جميع الكلمات. نعيد تشغيل القائمة من جديد.');
+            }
+            
+            let randomIndex;
+            
+            // اختيار كلمة عشوائية لم تعرض بعد
+            do {
+                randomIndex = Math.floor(Math.random() * allWords.length);
+            } while (usedIndices.has(randomIndex));
+            
+            usedIndices.add(randomIndex);
+            currentWordObj = allWords[randomIndex];
+            currentWordEl.textContent = currentWordObj.arabic;
+            pronunciationEl.textContent = currentWordObj.pronunciation;
+            userAnswerEl.value = '';
+            resultEl.style.display = 'none';
+            userAnswerEl.focus();
+            
+            // تحديث الإحصائيات
+            updateStats();
+        }
+
+        // تشغيل النطق الصوتي
+        function playPronunciation() {
+            if (!currentWordObj) return;
+            
+            // استخدام Web Speech API للنطق
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(currentWordObj.english);
+                utterance.lang = 'en-US';
+                speechSynthesis.speak(utterance);
+            } else {
+                alert('عذرًا، هذه الميزة غير مدعومة في متصفحك');
+            }
+        }
+
+        // التحقق من الإجابة
+        function checkAnswer() {
+            if (!currentWordObj) return;
+            
+            const userAnswer = userAnswerEl.value.trim().toLowerCase();
+            const correctAnswer = currentWordObj.english.toLowerCase();
+            
+            if (!userAnswer) {
+                resultEl.textContent = 'الرجاء إدخال إجابة';
+                resultEl.className = 'result wrong';
+                resultEl.style.display = 'block';
+                return;
+            }
+            
+            if (userAnswer === correctAnswer) {
+                resultEl.innerHTML = '<i class="fas fa-check-circle"></i> إجابة صحيحة! أحسنت!';
+                resultEl.className = 'result correct';
+                correctCount++;
+            } else {
+                resultEl.innerHTML = `<i class="fas fa-times-circle"></i> إجابة خاطئة. الترجمة الصحيحة هي: <span class="correct-answer">${currentWordObj.english}</span>`;
+                resultEl.className = 'result wrong';
+                wrongCount++;
+            }
+            
+            resultEl.style.display = 'block';
+            saveProgress();
+            updateStats();
+        }
+
+        // عرض الإجابة
+        function showAnswer() {
+            if (!currentWordObj) return;
+            
+            resultEl.textContent = `الترجمة الصحيحة هي: ${currentWordObj.english}`;
+            resultEl.className = 'result wrong';
+            resultEl.style.display = 'block';
+        }
+
+        // تحديث الإحصائيات
+        function updateStats() {
+            const remaining = allWords.length - usedIndices.size;
+            remainingWordsEl.textContent = remaining.toLocaleString();
+            correctWordsEl.textContent = correctCount.toLocaleString();
+            wrongWordsEl.textContent = wrongCount.toLocaleString();
+            
+            // تحديث شريط التقدم
+            const progressPercent = Math.round((usedIndices.size / allWords.length) * 100);
+            progressEl.style.width = `${progressPercent}%`;
+            progressPercentEl.textContent = progressPercent;
+        }
+
+        // أحداث المستخدم
+        checkBtn.addEventListener('click', checkAnswer);
+        nextBtn.addEventListener('click', showNextWord);
+        showAnswerBtn.addEventListener('click', showAnswer);
+        playBtn.addEventListener('click', playPronunciation);
+
+        userAnswerEl.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                checkAnswer();
+            }
+        });
+
+        // بدء التطبيق
+        init();
+    </script>
+</body>
+</html>
